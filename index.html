@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TattooAI — Try On, Create &amp; Decode Tattoos with AI</title>
+  <meta name="description" content="TattooAI lets you preview tattoos on your own skin, generate original designs from a single idea, and uncover the meaning behind any tattoo — powered by AI. By Vellune Design LCC." />
+  <meta name="theme-color" content="#0b0a0c" />
+  <meta property="og:title" content="TattooAI — Your Ink, Imagined by AI" />
+  <meta property="og:description" content="Try on tattoos, create original designs and decode their meaning with AI." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0b0a0c;
+      --ink-2: #131116;
+      --ink-3: #1b1820;
+      --line: rgba(240, 230, 214, 0.1);
+      --bone: #f0e6d6;
+      --muted: #a39b8f;
+      --crimson: #d2384a;
+      --ember: #ff7a59;
+      --gold: #d9b26f;
+      --grad: linear-gradient(135deg, #ff7a59 0%, #d2384a 50%, #8e2de2 100%);
+      --serif: "Cormorant Garamond", Georgia, serif;
+      --sans: "Inter", system-ui, -apple-system, sans-serif;
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ink);
+      color: var(--bone);
+      font-family: var(--sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::before {
+      /* subtle grain */
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 100;
+      opacity: .05;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    a { color: inherit; text-decoration: none; }
+    img, svg { display: block; }
+    .wrap { width: min(1180px, 92%); margin: 0 auto; }
+    .serif { font-family: var(--serif); }
+    .grad-text {
+      background: var(--grad);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: .6rem;
+      font-size: .75rem; letter-spacing: .28em; text-transform: uppercase;
+      color: var(--gold);
+    }
+    .eyebrow::before { content: ""; width: 28px; height: 1px; background: var(--gold); }
+
+    /* ---------- Nav ---------- */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      transition: background .3s, border-color .3s;
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(11, 10, 12, .78);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border-color: var(--line);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 76px; }
+    .logo { display: flex; align-items: center; gap: .65rem; font-weight: 600; font-size: 1.15rem; letter-spacing: .02em; }
+    .logo-mark {
+      width: 36px; height: 36px; border-radius: 11px;
+      background: var(--grad);
+      display: grid; place-items: center;
+      box-shadow: 0 6px 24px rgba(210, 56, 74, .4);
+    }
+    .nav-links { display: flex; gap: 2.2rem; font-size: .92rem; color: var(--muted); }
+    .nav-links a:hover { color: var(--bone); }
+    .btn {
+      display: inline-flex; align-items: center; gap: .6rem;
+      padding: .85rem 1.5rem; border-radius: 999px;
+      font-weight: 600; font-size: .92rem;
+      transition: transform .2s, box-shadow .2s, background .2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--bone); color: var(--ink); }
+    .btn-primary:hover { box-shadow: 0 10px 30px rgba(240, 230, 214, .25); }
+    .btn-ghost { border: 1px solid var(--line); color: var(--bone); }
+    .btn-ghost:hover { background: rgba(240, 230, 214, .06); }
+
+    /* ---------- Hero ---------- */
+    .hero { position: relative; padding: 150px 0 110px; overflow: hidden; }
+    .hero-glow {
+      position: absolute; border-radius: 50%; filter: blur(110px); opacity: .45; pointer-events: none;
+    }
+    .hero-glow.g1 { width: 520px; height: 520px; background: #d2384a; top: -120px; right: -80px; }
+    .hero-glow.g2 { width: 420px; height: 420px; background: #8e2de2; bottom: -160px; left: -120px; opacity: .3; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1.1fr .9fr; gap: 4rem; align-items: center; }
+    .hero h1 {
+      font-family: var(--serif); font-weight: 600;
+      font-size: clamp(3rem, 6.4vw, 5.6rem); line-height: .98; letter-spacing: -.01em;
+      margin: 1.4rem 0 1.6rem;
+    }
+    .hero h1 em { font-style: italic; }
+    .hero p.lead { font-size: 1.15rem; color: var(--muted); max-width: 520px; font-weight: 300; }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2.4rem; }
+    .store-btn {
+      display: inline-flex; align-items: center; gap: .8rem;
+      background: var(--bone); color: var(--ink);
+      padding: .75rem 1.4rem .75rem 1.15rem; border-radius: 14px;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .store-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(240, 230, 214, .22); }
+    .store-btn small { display: block; font-size: .68rem; line-height: 1; opacity: .7; }
+    .store-btn strong { display: block; font-size: 1.12rem; line-height: 1.2; font-weight: 600; }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 2.6rem; }
+    .tag {
+      font-size: .8rem; color: var(--muted);
+      padding: .45rem .9rem; border: 1px solid var(--line); border-radius: 999px;
+    }
+
+    /* Phone mockup */
+    .phone-stage { position: relative; display: flex; justify-content: center; }
+    .phone {
+      position: relative; width: 300px; aspect-ratio: 9 / 19.2;
+      border-radius: 46px; padding: 12px;
+      background: linear-gradient(160deg, #2a2630, #0e0d10);
+      box-shadow: 0 50px 100px rgba(0, 0, 0, .6), inset 0 0 0 1.5px rgba(255, 255, 255, .08);
+      transform: rotate(-4deg);
+      animation: float 7s ease-in-out infinite;
+    }
+    @keyframes float { 0%, 100% { transform: rotate(-4deg) translateY(0); } 50% { transform: rotate(-4deg) translateY(-14px); } }
+    .screen {
+      position: relative; width: 100%; height: 100%;
+      border-radius: 36px; overflow: hidden;
+      background: radial-gradient(120% 80% at 50% 30%, #3a2a2a 0%, #17131a 70%);
+    }
+    .notch {
+      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      width: 92px; height: 26px; border-radius: 20px; background: #000; z-index: 3;
+    }
+    .screen-top {
+      position: absolute; top: 48px; left: 18px; right: 18px; z-index: 2;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .72rem; color: rgba(240, 230, 214, .8);
+    }
+    .pill-live { display: inline-flex; align-items: center; gap: .35rem; background: rgba(0, 0, 0, .45); padding: .3rem .65rem; border-radius: 99px; }
+    .pill-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
+    .arm { position: absolute; inset: 0; }
+    .screen-bottom {
+      position: absolute; left: 14px; right: 14px; bottom: 16px; z-index: 2;
+      background: rgba(15, 13, 18, .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 22px; padding: 14px;
+    }
+    .sb-row { display: flex; gap: 8px; }
+    .sb-thumb {
+      flex: 1; aspect-ratio: 1; border-radius: 12px;
+      background: #241f28; display: grid; place-items: center;
+      border: 1px solid transparent;
+    }
+    .sb-thumb.active { border-color: var(--ember); background: #2e2228; }
+    .sb-slider { margin-top: 12px; display: flex; align-items: center; gap: 10px; font-size: .64rem; color: var(--muted); }
+    .sb-track { flex: 1; height: 4px; border-radius: 4px; background: #2c2830; position: relative; }
+    .sb-track::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 64%; border-radius: 4px; background: var(--grad); }
+    .float-card {
+      position: absolute; z-index: 4;
+      background: rgba(22, 19, 25, .85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--line); border-radius: 16px;
+      padding: .8rem 1rem; font-size: .78rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .45);
+    }
+    .float-card b { display: block; font-size: .85rem; color: var(--bone); }
+    .float-card span { color: var(--muted); }
+    .fc-1 { top: 16%; left: -6%; animation: float2 6s ease-in-out infinite; }
+    .fc-2 { bottom: 20%; right: -8%; animation: float2 6s ease-in-out infinite 1.5s; }
+    @keyframes float2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .fc-icon { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--grad); margin-bottom: .5rem; }
+
+    /* ---------- Marquee ---------- */
+    .marquee { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 1.4rem 0; overflow: hidden; }
+    .marquee-track { display: flex; gap: 3.5rem; width: max-content; animation: scroll 40s linear infinite; }
+    .marquee span { font-family: var(--serif); font-size: 1.7rem; font-style: italic; color: rgba(240, 230, 214, .55); white-space: nowrap; }
+    .marquee span::after { content: "✦"; font-style: normal; font-size: .9rem; color: var(--crimson); margin-left: 3.5rem; vertical-align: middle; }
+    @keyframes scroll { to { transform: translateX(-50%); } }
+
+    /* ---------- Sections ---------- */
+    section { padding: 120px 0; position: relative; }
+    .section-head { max-width: 680px; margin-bottom: 4rem; }
+    .section-head.center { margin-left: auto; margin-right: auto; text-align: center; }
+    .section-head.center .eyebrow::after { content: ""; width: 28px; height: 1px; background: var(--gold); }
+    .section-head h2 {
+      font-family: var(--serif); font-weight: 600;
+      font-size: clamp(2.4rem, 4.6vw, 3.8rem); line-height: 1.05;
+      margin: 1.1rem 0 1.2rem;
+    }
+    .section-head h2 em { font-style: italic; }
+    .section-head p { color: var(--muted); font-size: 1.08rem; font-weight: 300; }
+
+    /* Features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+    .feature {
+      position: relative; overflow: hidden;
+      background: linear-gradient(180deg, var(--ink-2), var(--ink));
+      border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 2.2rem 2rem 2rem;
+      transition: transform .35s, border-color .35s;
+    }
+    .feature:hover { transform: translateY(-6px); border-color: rgba(210, 56, 74, .45); }
+    .feature::after {
+      content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%;
+      right: -120px; top: -120px; background: var(--crimson); filter: blur(90px); opacity: 0;
+      transition: opacity .4s;
+    }
+    .feature:hover::after { opacity: .28; }
+    .feature-num { font-family: var(--serif); font-size: 1rem; color: var(--gold); letter-spacing: .1em; }
+    .feature-art {
+      height: 190px; margin: 1.4rem 0 1.6rem; border-radius: 16px;
+      background: radial-gradient(circle at 50% 50%, #221c24, #121014);
+      display: grid; place-items: center; border: 1px solid var(--line);
+    }
+    .feature h3 { font-family: var(--serif); font-size: 1.95rem; font-weight: 600; line-height: 1.1; margin-bottom: .7rem; }
+    .feature p { color: var(--muted); font-size: .96rem; }
+    .feature ul { list-style: none; margin-top: 1.2rem; display: grid; gap: .5rem; }
+    .feature li { font-size: .88rem; color: rgba(240, 230, 214, .82); display: flex; gap: .6rem; align-items: baseline; }
+    .feature li::before { content: "✦"; color: var(--crimson); font-size: .7rem; }
+
+    /* Split showcase */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+    .split + .split { margin-top: 140px; }
+    .split.reverse .split-media { order: 2; }
+    .split-media {
+      position: relative; border-radius: 28px; overflow: hidden;
+      border: 1px solid var(--line);
+      background: radial-gradient(100% 100% at 30% 20%, #2a1d22 0%, #110f13 70%);
+      aspect-ratio: 1 / 1;
+      display: grid; place-items: center;
+    }
+    .split-copy h3 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 3.6vw, 3rem); line-height: 1.08; margin: 1rem 0 1.2rem; }
+    .split-copy h3 em { font-style: italic; }
+    .split-copy > p { color: var(--muted); font-weight: 300; font-size: 1.05rem; }
+    .checks { margin-top: 2rem; display: grid; gap: 1.1rem; }
+    .check { display: flex; gap: 1rem; align-items: flex-start; }
+    .check-ic {
+      flex: none; width: 40px; height: 40px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: rgba(210, 56, 74, .12); border: 1px solid rgba(210, 56, 74, .3);
+    }
+    .check b { display: block; font-weight: 600; font-size: .98rem; }
+    .check span { color: var(--muted); font-size: .9rem; }
+
+    /* prompt box mock */
+    .prompt-mock { width: 84%; display: grid; gap: 1rem; }
+    .prompt-box {
+      background: rgba(11, 10, 12, .8); border: 1px solid var(--line); border-radius: 16px;
+      padding: 1rem 1.1rem; font-size: .9rem; color: rgba(240, 230, 214, .88);
+    }
+    .prompt-box small { display: block; color: var(--gold); font-size: .68rem; letter-spacing: .2em; text-transform: uppercase; margin-bottom: .35rem; }
+    .caret { display: inline-block; width: 2px; height: 1em; background: var(--ember); vertical-align: -2px; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .gen-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
+    .gen-tile {
+      aspect-ratio: 1; border-radius: 14px; background: #f0e6d6;
+      display: grid; place-items: center; position: relative; overflow: hidden;
+    }
+    .gen-tile.dark { background: #1d191f; }
+    .gen-tile .lbl { position: absolute; left: 8px; bottom: 8px; font-size: .62rem; padding: .2rem .5rem; border-radius: 99px; background: rgba(11, 10, 12, .75); color: var(--bone); }
+
+    /* meaning card mock */
+    .meaning-card {
+      width: 84%; background: rgba(11, 10, 12, .82); border: 1px solid var(--line);
+      border-radius: 22px; padding: 1.6rem;
+    }
+    .meaning-head { display: flex; gap: 1rem; align-items: center; padding-bottom: 1.2rem; border-bottom: 1px solid var(--line); }
+    .meaning-thumb { width: 72px; height: 72px; border-radius: 16px; background: #f0e6d6; display: grid; place-items: center; flex: none; }
+    .meaning-head b { font-family: var(--serif); font-size: 1.5rem; font-weight: 600; display: block; line-height: 1.1; }
+    .meaning-head span { color: var(--muted); font-size: .8rem; }
+    .meaning-body { padding-top: 1.1rem; display: grid; gap: .9rem; }
+    .m-row small { display: block; font-size: .66rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: .2rem; }
+    .m-row p { font-size: .88rem; color: rgba(240, 230, 214, .85); }
+    .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .chip { font-size: .72rem; padding: .3rem .7rem; border-radius: 99px; background: rgba(210, 56, 74, .14); color: #f3a3ad; border: 1px solid rgba(210, 56, 74, .3); }
+
+    /* Steps */
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.4rem; counter-reset: step; }
+    .step { padding: 2rem 1.6rem; border-top: 1px solid var(--line); position: relative; }
+    .step::before {
+      counter-increment: step; content: "0" counter(step);
+      font-family: var(--serif); font-size: 3.4rem; font-weight: 600; line-height: 1;
+      display: block; margin-bottom: 1.2rem;
+      background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .step::after { content: ""; position: absolute; top: -1px; left: 0; width: 46px; height: 2px; background: var(--crimson); }
+    .step h4 { font-size: 1.1rem; font-weight: 600; margin-bottom: .5rem; }
+    .step p { color: var(--muted); font-size: .92rem; }
+
+    /* Styles gallery */
+    .styles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1rem; }
+    .style-card {
+      aspect-ratio: 3 / 4; border-radius: 18px; overflow: hidden; position: relative;
+      background: var(--ink-2); border: 1px solid var(--line);
+      display: grid; place-items: center;
+      transition: transform .3s;
+    }
+    .style-card:hover { transform: translateY(-6px) rotate(-1deg); }
+    .style-card.light { background: #efe5d4; }
+    .style-card .name {
+      position: absolute; left: 0; right: 0; bottom: 0; padding: .8rem;
+      font-size: .8rem; font-weight: 500; text-align: center;
+      background: linear-gradient(transparent, rgba(11, 10, 12, .85));
+    }
+    .style-card.light .name { color: var(--bone); }
+
+    /* Why / stats strip */
+    .why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
+    .why-card { background: var(--ink-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 2rem; }
+    .why-card h4 { font-family: var(--serif); font-size: 1.6rem; font-weight: 600; margin: 1rem 0 .5rem; }
+    .why-card p { color: var(--muted); font-size: .94rem; }
+
+    /* FAQ */
+    .faq { max-width: 820px; margin: 0 auto; }
+    details { border-bottom: 1px solid var(--line); }
+    summary {
+      list-style: none; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+      padding: 1.6rem 0; font-size: 1.12rem; font-weight: 500;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary .pm { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; transition: transform .3s, background .3s; }
+    details[open] summary .pm { transform: rotate(45deg); background: var(--crimson); border-color: var(--crimson); }
+    details p { color: var(--muted); padding: 0 3rem 1.6rem 0; }
+
+    /* CTA */
+    .cta {
+      position: relative; overflow: hidden; text-align: center;
+      border-radius: 36px; padding: 6rem 2rem;
+      background: radial-gradient(80% 120% at 50% 0%, #3b1620 0%, #140f15 60%);
+      border: 1px solid rgba(210, 56, 74, .3);
+    }
+    .cta h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.6rem, 5.4vw, 4.6rem); line-height: 1; margin: 1.2rem 0 1.2rem; }
+    .cta h2 em { font-style: italic; }
+    .cta p { color: var(--muted); max-width: 520px; margin: 0 auto; font-weight: 300; font-size: 1.08rem; }
+    .cta .hero-cta { justify-content: center; }
+    .cta-art { position: absolute; opacity: .12; pointer-events: none; }
+
+    /* Footer */
+    footer { padding: 80px 0 40px; border-top: 1px solid var(--line); margin-top: 120px; }
+    .foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 3rem; }
+    .foot-grid p { color: var(--muted); font-size: .9rem; margin-top: 1rem; max-width: 320px; }
+    .foot-grid h5 { font-size: .78rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.1rem; font-weight: 500; }
+    .foot-grid ul { list-style: none; display: grid; gap: .65rem; font-size: .92rem; color: var(--muted); }
+    .foot-grid ul a:hover { color: var(--bone); }
+    .foot-bottom {
+      margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--line);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+      font-size: .84rem; color: var(--muted);
+    }
+
+    /* Reveal */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .9s ease, transform .9s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .styles { grid-template-columns: repeat(3, 1fr); }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 900px) {
+      .nav-links { display: none; }
+      .hero { padding-top: 120px; }
+      .hero-grid, .split { grid-template-columns: 1fr; gap: 3.5rem; }
+      .split.reverse .split-media { order: 0; }
+      .features, .why { grid-template-columns: 1fr; }
+      .foot-grid { grid-template-columns: 1fr 1fr; }
+      .fc-1 { left: 0; } .fc-2 { right: 0; }
+      section { padding: 90px 0; }
+    }
+    @media (max-width: 560px) {
+      .styles { grid-template-columns: repeat(2, 1fr); }
+      .steps { grid-template-columns: 1fr; }
+      .foot-grid { grid-template-columns: 1fr; }
+      .nav-inner .btn { display: none; }
+      .phone { width: 260px; }
+      .float-card { display: none; }
+      details p { padding-right: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Reusable SVG tattoo artwork -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="art-rose" viewBox="0 0 120 160">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M60 22c-14 0-26 10-26 25 0 16 12 28 26 28s26-12 26-28c0-15-12-25-26-25z"/>
+          <path d="M60 34c-8 0-14 6-14 13 0 8 6 14 14 14s14-6 14-14"/>
+          <path d="M60 44c-3 0-5 2-5 4s2 4 5 4 5-2 5-4"/>
+          <path d="M34 47c-6 4-9 10-8 17 6 0 12-3 16-8"/>
+          <path d="M86 47c6 4 9 10 8 17-6 0-12-3-16-8"/>
+          <path d="M60 75v70"/>
+          <path d="M60 98c-10-6-24-6-30 2 8 8 22 7 30-2z"/>
+          <path d="M60 116c10-6 24-6 30 2-8 8-22 7-30-2z"/>
+          <path d="M57 88l-5-3M63 128l5-3M57 136l-5-2"/>
+        </g>
+      </symbol>
+      <symbol id="art-snake" viewBox="0 0 120 160">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M62 16c10 0 18 6 18 14s-8 12-18 12"/>
+          <path d="M62 16c-8 0-13 5-13 12 0 6 5 10 13 14"/>
+          <circle cx="68" cy="25" r="1.6" fill="currentColor"/>
+          <path d="M80 28l9-2-5 4 6 2"/>
+          <path d="M62 42c22 8 30 22 18 34-10 10-36 6-40 20-4 13 16 20 32 22 18 2 24 14 12 22-8 5-22 4-30 0"/>
+          <path d="M54 46c18 8 22 18 14 26-8 8-32 8-36 22-5 18 18 26 36 28 12 1 16 9 8 14"/>
+          <path d="M60 58l6 3M50 90l7 1M56 116l7-2M70 136l5 3"/>
+        </g>
+      </symbol>
+      <symbol id="art-moon" viewBox="0 0 120 120">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M72 18a42 42 0 1 0 30 70A34 34 0 0 1 72 18z"/>
+          <path d="M84 30l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>
+          <path d="M98 54l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/>
+          <circle cx="44" cy="60" r="3"/><circle cx="56" cy="84" r="2"/><circle cx="36" cy="82" r="1.5"/>
+        </g>
+      </symbol>
+      <symbol id="art-eye" viewBox="0 0 120 120">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M60 14l46 80H14z"/>
+          <path d="M34 66c8-10 17-14 26-14s18 4 26 14c-8 10-17 14-26 14s-18-4-26-14z"/>
+          <circle cx="60" cy="66" r="7"/>
+          <path d="M60 4v6M30 20l4 5M90 20l-4 5M14 40l6 2M106 40l-6 2"/>
+        </g>
+      </symbol>
+      <symbol id="art-swallow" viewBox="0 0 140 110">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M70 46c-6-10-16-14-26-12 6 4 10 10 12 16"/>
+          <path d="M70 46c8-4 14-12 14-22-12 2-20 10-22 20"/>
+          <path d="M62 44c-20-14-44-18-58-10 18 2 32 12 44 26 6 6 14 8 22 6"/>
+          <path d="M84 34c18-8 38-6 52 4-18 0-30 6-40 16"/>
+          <path d="M70 66c-4 12-14 22-26 30 4-10 6-18 6-26M70 66c8 10 12 22 10 36-6-10-12-18-20-24"/>
+          <circle cx="78" cy="30" r="1.4" fill="currentColor"/>
+        </g>
+      </symbol>
+      <symbol id="art-geo" viewBox="0 0 120 120">
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+          <circle cx="60" cy="60" r="44"/>
+          <circle cx="60" cy="60" r="28"/>
+          <path d="M60 16l38 66H22z"/>
+          <path d="M60 104L22 38h76z"/>
+          <circle cx="60" cy="60" r="6" fill="currentColor"/>
+        </g>
+      </symbol>
+      <symbol id="art-dagger" viewBox="0 0 80 160">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M40 8l8 22v66l-8 18-8-18V30z"/>
+          <path d="M40 30v74"/>
+          <path d="M14 112h52M20 112c0 6 4 10 10 10h20c6 0 10-4 10-10"/>
+          <path d="M34 122v20h12v-20"/>
+          <circle cx="40" cy="150" r="6"/>
+        </g>
+      </symbol>
+      <symbol id="art-wave" viewBox="0 0 140 100">
+        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 78c20-4 30-24 34-44 4-20 24-28 40-18 12 8 10 26-2 28-10 2-14-10-6-14"/>
+          <path d="M6 90c28 0 46-12 58-30 6 14 20 22 36 18 16-4 28-2 34 6"/>
+          <path d="M40 78c10-2 18-10 22-20M80 86c14 0 26-4 36-10"/>
+          <circle cx="112" cy="22" r="10"/>
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- Nav -->
+  <nav id="nav">
+    <div class="wrap nav-inner">
+      <a href="#" class="logo" aria-label="TattooAI home">
+        <span class="logo-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.2 6.6L21 10l-5.4 4.1L17.5 21 12 17.2 6.5 21l1.9-6.9L3 10l6.8-1.4z"/></svg>
+        </span>
+        TattooAI
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#styles">Styles</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <a href="#download" class="btn btn-primary">Get the App</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-glow g1"></div>
+    <div class="hero-glow g2"></div>
+    <div class="wrap hero-grid">
+      <div class="reveal">
+        <span class="eyebrow">AI Tattoo Studio</span>
+        <h1>Your next ink,<br /><em class="grad-text">imagined</em> by AI.</h1>
+        <p class="lead">Try tattoos on your own skin before the needle touches it, turn a single idea into original artwork, and discover the story behind every symbol — all in one app.</p>
+        <div class="hero-cta" id="download">
+          <a href="#" class="store-btn" aria-label="Download on the App Store">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.86-.76-1.47.02-2.83.86-3.59 2.17-1.53 2.66-.39 6.6 1.1 8.75.73 1.05 1.6 2.24 2.73 2.2 1.1-.05 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.4 1.2-2.46-.03-.01-2.3-.88-2.32-3.5zM14.2 6.14c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.64-1.05 1.67-.92 2.66.97.08 1.96-.49 2.56-1.21z"/></svg>
+            <span><small>Download on the</small><strong>App Store</strong></span>
+          </a>
+          <a href="#features" class="btn btn-ghost">Explore features
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+        <div class="hero-tags">
+          <span class="tag">AR Try-On</span>
+          <span class="tag">AI Design Generator</span>
+          <span class="tag">Tattoo Meaning</span>
+          <span class="tag">30+ Styles</span>
+        </div>
+      </div>
+
+      <div class="phone-stage reveal">
+        <div class="phone">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="screen-top">
+              <span class="pill-live"><i></i> Live Try-On</span>
+              <span>Forearm</span>
+            </div>
+            <!-- Arm with tattoo overlay -->
+            <svg class="arm" viewBox="0 0 276 590" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <linearGradient id="skin" x1="0" x2="1">
+                  <stop offset="0" stop-color="#8a5c47"/>
+                  <stop offset=".45" stop-color="#c58d70"/>
+                  <stop offset="1" stop-color="#7b503d"/>
+                </linearGradient>
+              </defs>
+              <path d="M70 620 C 80 460, 96 330, 104 150 C 108 90, 168 90, 172 150 C 180 330, 196 460, 206 620 Z" fill="url(#skin)"/>
+              <g transform="translate(88 170) scale(.83)" color="#1a1214" opacity=".88">
+                <use href="#art-rose" width="120" height="160"/>
+              </g>
+              <g fill="none" stroke="#ff7a59" stroke-width="1.2" stroke-dasharray="5 5" opacity=".9">
+                <rect x="80" y="160" width="116" height="152" rx="10"/>
+              </g>
+              <g fill="#ff7a59"><circle cx="80" cy="160" r="4"/><circle cx="196" cy="160" r="4"/><circle cx="80" cy="312" r="4"/><circle cx="196" cy="312" r="4"/></g>
+            </svg>
+            <div class="screen-bottom">
+              <div class="sb-row">
+                <div class="sb-thumb active"><svg width="28" height="36" color="#f0e6d6"><use href="#art-rose"/></svg></div>
+                <div class="sb-thumb"><svg width="30" height="30" color="#a39b8f"><use href="#art-moon"/></svg></div>
+                <div class="sb-thumb"><svg width="28" height="36" color="#a39b8f"><use href="#art-snake"/></svg></div>
+                <div class="sb-thumb"><svg width="30" height="30" color="#a39b8f"><use href="#art-geo"/></svg></div>
+              </div>
+              <div class="sb-slider"><span>Size</span><div class="sb-track"></div><span>64%</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="float-card fc-1">
+          <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></div>
+          <b>Design generated</b><span>Fine-line rose · 4 variations</span>
+        </div>
+        <div class="float-card fc-2">
+          <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg></div>
+          <b>Meaning: Rose</b><span>Love · Balance · Renewal</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Fine Line</span><span>Traditional</span><span>Blackwork</span><span>Japanese</span><span>Minimalist</span><span>Geometric</span><span>Watercolor</span><span>Neo-Traditional</span><span>Tribal</span><span>Dotwork</span>
+      <span>Fine Line</span><span>Traditional</span><span>Blackwork</span><span>Japanese</span><span>Minimalist</span><span>Geometric</span><span>Watercolor</span><span>Neo-Traditional</span><span>Tribal</span><span>Dotwork</span>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Three tools, one studio</span>
+        <h2>Everything you need <em>before</em> the needle.</h2>
+        <p>TattooAI brings the whole journey into your pocket — from the first spark of an idea to knowing exactly how it will look and what it will say about you.</p>
+      </div>
+
+      <div class="features">
+        <article class="feature reveal">
+          <span class="feature-num">01 — TRY ON</span>
+          <div class="feature-art">
+            <svg width="190" height="160" viewBox="0 0 190 160" aria-hidden="true">
+              <path d="M60 170 C 66 110, 74 60, 80 20 C 84 4, 110 4, 114 20 C 120 60, 128 110, 134 170Z" fill="#b98166" opacity=".9"/>
+              <g transform="translate(72 34) scale(.42)" color="#1a1214"><use href="#art-moon" width="120" height="120"/></g>
+              <rect x="66" y="28" width="62" height="62" rx="8" fill="none" stroke="#ff7a59" stroke-dasharray="4 4"/>
+              <circle cx="150" cy="40" r="16" fill="#1d191f" stroke="#ff7a59"/>
+              <path d="M144 40l4 4 8-8" stroke="#ff7a59" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+          <h3>AI Tattoo Try-On</h3>
+          <p>Point your camera or upload a photo and see any design placed realistically on your skin — curved, shaded and blended to match your tone.</p>
+          <ul>
+            <li>Real-time AR preview on any body part</li>
+            <li>Resize, rotate and adjust opacity</li>
+            <li>Before &amp; after snapshots to share</li>
+          </ul>
+        </article>
+
+        <article class="feature reveal">
+          <span class="feature-num">02 — CREATE</span>
+          <div class="feature-art">
+            <svg width="190" height="160" viewBox="0 0 190 160" aria-hidden="true">
+              <rect x="20" y="20" width="70" height="56" rx="10" fill="#f0e6d6"/>
+              <rect x="100" y="20" width="70" height="56" rx="10" fill="#f0e6d6"/>
+              <rect x="20" y="84" width="70" height="56" rx="10" fill="#f0e6d6"/>
+              <rect x="100" y="84" width="70" height="56" rx="10" fill="#2a2430" stroke="#ff7a59"/>
+              <g color="#151116">
+                <use href="#art-swallow" x="30" y="28" width="50" height="40"/>
+                <use href="#art-dagger" x="122" y="24" width="26" height="48"/>
+                <use href="#art-wave" x="30" y="92" width="50" height="40"/>
+              </g>
+              <path d="M135 100l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ff7a59"/>
+            </svg>
+          </div>
+          <h3>AI Design Generator</h3>
+          <p>Describe what you imagine — a word, a memory, a feeling — and get original, stencil-ready tattoo designs in seconds, in the style you love.</p>
+          <ul>
+            <li>Text-to-tattoo in 30+ styles</li>
+            <li>Remix, refine &amp; generate variations</li>
+            <li>High-resolution export for your artist</li>
+          </ul>
+        </article>
+
+        <article class="feature reveal">
+          <span class="feature-num">03 — DECODE</span>
+          <div class="feature-art">
+            <svg width="190" height="160" viewBox="0 0 190 160" aria-hidden="true">
+              <rect x="24" y="30" width="64" height="100" rx="12" fill="#f0e6d6"/>
+              <g color="#151116"><use href="#art-eye" x="30" y="52" width="52" height="52"/></g>
+              <rect x="100" y="38" width="66" height="8" rx="4" fill="#d9b26f"/>
+              <rect x="100" y="56" width="58" height="6" rx="3" fill="#4a434f"/>
+              <rect x="100" y="68" width="62" height="6" rx="3" fill="#4a434f"/>
+              <rect x="100" y="80" width="44" height="6" rx="3" fill="#4a434f"/>
+              <rect x="100" y="98" width="30" height="14" rx="7" fill="rgba(210,56,74,.3)"/>
+              <rect x="134" y="98" width="30" height="14" rx="7" fill="rgba(210,56,74,.3)"/>
+            </svg>
+          </div>
+          <h3>Tattoo Meaning</h3>
+          <p>Snap a photo of any tattoo or pick a symbol to uncover its origins, cultural context and the emotions it traditionally carries.</p>
+          <ul>
+            <li>Scan a tattoo to identify its symbols</li>
+            <li>History, culture &amp; symbolism explained</li>
+            <li>Ideas to personalise its message</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Showcase -->
+  <section style="padding-top: 40px;">
+    <div class="wrap">
+      <div class="split reveal">
+        <div class="split-media">
+          <div class="prompt-mock">
+            <div class="prompt-box">
+              <small>Your idea</small>
+              A swallow flying over ocean waves, fine-line, minimalist<span class="caret"></span>
+            </div>
+            <div class="gen-grid">
+              <div class="gen-tile"><svg width="70%" height="70%" color="#151116"><use href="#art-swallow"/></svg><span class="lbl">Fine line</span></div>
+              <div class="gen-tile dark"><svg width="70%" height="70%" color="#f0e6d6"><use href="#art-wave"/></svg><span class="lbl">Blackwork</span></div>
+              <div class="gen-tile dark"><svg width="60%" height="60%" color="#d9b26f"><use href="#art-geo"/></svg><span class="lbl">Geometric</span></div>
+              <div class="gen-tile"><svg width="60%" height="70%" color="#151116"><use href="#art-dagger"/></svg><span class="lbl">Traditional</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="split-copy">
+          <span class="eyebrow">Create</span>
+          <h3>From a single sentence to a <em>one-of-a-kind</em> design.</h3>
+          <p>No drawing skills needed. Tell TattooAI what you want, pick a style, and watch your idea come to life. Keep refining until it feels unmistakably yours.</p>
+          <div class="checks">
+            <div class="check">
+              <div class="check-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+              <div><b>Prompt or sketch</b><span>Start from words, a reference photo or a rough doodle.</span></div>
+            </div>
+            <div class="check">
+              <div class="check-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></div>
+              <div><b>Style library</b><span>Fine line, traditional, Japanese, blackwork, watercolor and more.</span></div>
+            </div>
+            <div class="check">
+              <div class="check-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div>
+              <div><b>Artist-ready export</b><span>Clean, high-resolution line art to bring to your studio.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split reverse reveal">
+        <div class="split-media">
+          <div class="meaning-card">
+            <div class="meaning-head">
+              <div class="meaning-thumb"><svg width="46" height="60" color="#151116"><use href="#art-snake"/></svg></div>
+              <div><b>Serpent</b><span>Identified · Neo-traditional</span></div>
+            </div>
+            <div class="meaning-body">
+              <div class="m-row"><small>Symbolism</small><p>Transformation, rebirth and healing — the snake sheds its skin to begin again.</p></div>
+              <div class="m-row"><small>Origins</small><p>Revered across Greek, Egyptian, Hindu and Japanese traditions as a guardian and a symbol of wisdom.</p></div>
+              <div class="m-row"><small>Themes</small>
+                <div class="chips"><span class="chip">Rebirth</span><span class="chip">Protection</span><span class="chip">Wisdom</span><span class="chip">Temptation</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="split-copy">
+          <span class="eyebrow">Decode</span>
+          <h3>Know the <em>story</em> your skin will tell.</h3>
+          <p>A tattoo is forever — its meaning should be too. TattooAI explains the symbolism, history and cultural context behind designs, so you choose ink that truly speaks for you.</p>
+          <div class="checks">
+            <div class="check">
+              <div class="check-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+              <div><b>Scan any tattoo</b><span>Photograph a tattoo and let AI recognise its elements.</span></div>
+            </div>
+            <div class="check">
+              <div class="check-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="2"><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/><circle cx="12" cy="12" r="10"/></svg></div>
+              <div><b>Cultural context</b><span>Understand where a symbol comes from and how it's seen today.</span></div>
+            </div>
+            <div class="check">
+              <div class="check-ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/></svg></div>
+              <div><b>Personal meaning</b><span>Get ideas to combine symbols into a message that's yours alone.</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">How it works</span>
+        <h2>Idea to ink in <em>four</em> steps.</h2>
+      </div>
+      <div class="steps reveal">
+        <div class="step"><h4>Imagine</h4><p>Type an idea, upload a reference, or browse thousands of designs by style and theme.</p></div>
+        <div class="step"><h4>Generate</h4><p>AI creates original tattoo artwork in seconds. Remix it until every line feels right.</p></div>
+        <div class="step"><h4>Try it on</h4><p>Place the design on your body with a photo or live camera to check size and placement.</p></div>
+        <div class="step"><h4>Understand &amp; ink</h4><p>Read the meaning behind it, save your favourite, and share it with your tattoo artist.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Styles -->
+  <section id="styles" style="padding-top: 40px;">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Style library</span>
+        <h2>Every style. <em>Your</em> signature.</h2>
+        <p>From delicate fine line to bold traditional — explore a growing library of tattoo styles and let AI adapt your idea to each one.</p>
+      </div>
+      <div class="styles reveal">
+        <div class="style-card light"><svg width="60%" height="60%" color="#151116"><use href="#art-rose"/></svg><span class="name">Fine Line</span></div>
+        <div class="style-card"><svg width="62%" height="62%" color="#d2384a"><use href="#art-dagger"/></svg><span class="name">Traditional</span></div>
+        <div class="style-card light"><svg width="70%" height="70%" color="#151116"><use href="#art-wave"/></svg><span class="name">Japanese</span></div>
+        <div class="style-card"><svg width="60%" height="60%" color="#d9b26f"><use href="#art-geo"/></svg><span class="name">Geometric</span></div>
+        <div class="style-card light"><svg width="64%" height="64%" color="#151116"><use href="#art-moon"/></svg><span class="name">Minimalist</span></div>
+        <div class="style-card"><svg width="60%" height="60%" color="#f0e6d6"><use href="#art-eye"/></svg><span class="name">Blackwork</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why -->
+  <section style="padding-top: 40px;">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">Why TattooAI</span>
+        <h2>Commit with <em>confidence</em>.</h2>
+      </div>
+      <div class="why reveal">
+        <div class="why-card">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="1.6"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+          <h4>No regrets</h4>
+          <p>See exactly how a design looks on your body before making a permanent decision.</p>
+        </div>
+        <div class="why-card">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="1.6"><path d="M12 2l2.2 6.6L21 10l-5.4 4.1L17.5 21 12 17.2 6.5 21l1.9-6.9L3 10l6.8-1.4z"/></svg>
+          <h4>Truly original</h4>
+          <p>Every generated design is created fresh from your idea — not pulled from a stock catalogue.</p>
+        </div>
+        <div class="why-card">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ff7a59" stroke-width="1.6"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h4>Private by design</h4>
+          <p>Your photos are used only to create your previews. Read our <a href="policies.html" style="color:var(--bone);text-decoration:underline">Privacy Policy</a>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="section-head center reveal">
+        <span class="eyebrow">FAQ</span>
+        <h2>Questions, <em>answered</em>.</h2>
+      </div>
+      <div class="faq reveal">
+        <details>
+          <summary>How realistic is the tattoo try-on?<span class="pm">+</span></summary>
+          <p>TattooAI maps the design onto the curves of your body and blends it with your skin tone and lighting, giving you a lifelike preview of how the tattoo will look once healed.</p>
+        </details>
+        <details>
+          <summary>Can I bring AI-generated designs to my tattoo artist?<span class="pm">+</span></summary>
+          <p>Absolutely. Export your design in high resolution and share it with your artist as a reference. Most artists will adapt it to your anatomy and their own technique.</p>
+        </details>
+        <details>
+          <summary>How accurate are the tattoo meanings?<span class="pm">+</span></summary>
+          <p>Meanings are drawn from widely recognised historical and cultural interpretations. Symbolism can vary between cultures and individuals, so treat them as a guide and add your own story.</p>
+        </details>
+        <details>
+          <summary>Is TattooAI free?<span class="pm">+</span></summary>
+          <p>You can download TattooAI and explore it for free. Premium features such as unlimited generations and HD exports are available through an optional in-app subscription.</p>
+        </details>
+        <details>
+          <summary>What happens to the photos I upload?<span class="pm">+</span></summary>
+          <p>Photos are processed only to deliver the features you use, such as try-on previews or meaning scans. You can delete your content at any time. See our <a href="policies.html" style="color:var(--bone);text-decoration:underline">Privacy Policy</a> for details.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding-top: 0; padding-bottom: 0;">
+    <div class="wrap">
+      <div class="cta reveal">
+        <svg class="cta-art" width="320" height="420" style="left:-60px; top:-40px;" color="#f0e6d6"><use href="#art-rose"/></svg>
+        <svg class="cta-art" width="300" height="400" style="right:-50px; bottom:-60px;" color="#f0e6d6"><use href="#art-snake"/></svg>
+        <span class="eyebrow">Start today</span>
+        <h2>Design the tattoo<br />you'll <em class="grad-text">love forever</em>.</h2>
+        <p>Download TattooAI and turn your ideas into ink-ready art — try it on, make it yours, and know what it means.</p>
+        <div class="hero-cta">
+          <a href="#" class="store-btn" aria-label="Download on the App Store">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.6c-.02-2.2 1.8-3.26 1.88-3.31-1.03-1.5-2.62-1.7-3.18-1.73-1.35-.14-2.64.8-3.33.8-.69 0-1.74-.78-2.86-.76-1.47.02-2.83.86-3.59 2.17-1.53 2.66-.39 6.6 1.1 8.75.73 1.05 1.6 2.24 2.73 2.2 1.1-.05 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.07 2.65-2.13.84-1.22 1.18-2.4 1.2-2.46-.03-.01-2.3-.88-2.32-3.5zM14.2 6.14c.6-.73 1.01-1.75.9-2.76-.87.04-1.92.58-2.54 1.31-.56.64-1.05 1.67-.92 2.66.97.08 1.96-.49 2.56-1.21z"/></svg>
+            <span><small>Download on the</small><strong>App Store</strong></span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <a href="#" class="logo">
+            <span class="logo-mark">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.2 6.6L21 10l-5.4 4.1L17.5 21 12 17.2 6.5 21l1.9-6.9L3 10l6.8-1.4z"/></svg>
+            </span>
+            TattooAI
+          </a>
+          <p>Try on, create and decode tattoos with AI. Published by Vellune Design LCC.</p>
+        </div>
+        <div>
+          <h5>Product</h5>
+          <ul>
+            <li><a href="#features">Try-On</a></li>
+            <li><a href="#features">Design Generator</a></li>
+            <li><a href="#features">Tattoo Meaning</a></li>
+            <li><a href="#styles">Styles</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Legal</h5>
+          <ul>
+            <li><a href="policies.html">Privacy Policy</a></li>
+            <li><a href="term.html">Terms of Use</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Contact</h5>
+          <ul>
+            <li><a href="mailto:oneodoserdo9@gmail.com">oneodoserdo9@gmail.com</a></li>
+            <li>Vellune Design LCC</li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>© <span id="year">2026</span> Vellune Design LCC. All rights reserved.</span>
+        <span>TattooAI is a creative preview tool. Always consult a professional tattoo artist.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
