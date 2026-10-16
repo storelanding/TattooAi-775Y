@@ -153,7 +153,22 @@
     }
     .pill-live { display: inline-flex; align-items: center; gap: .35rem; background: rgba(0, 0, 0, .45); padding: .3rem .65rem; border-radius: 99px; }
     .pill-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--ember); box-shadow: 0 0 8px var(--ember); }
-    .arm { position: absolute; inset: 0; }
+    .arm { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .screen::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(180deg, rgba(0, 0, 0, .45) 0%, transparent 22%, transparent 60%, rgba(0, 0, 0, .55) 100%);
+    }
+    .scan-frame {
+      position: absolute; z-index: 1; left: 22%; right: 22%; top: 30%; height: 30%;
+      border: 1.5px dashed var(--ember); border-radius: 12px;
+      box-shadow: 0 0 0 999px rgba(0, 0, 0, .12);
+    }
+    .scan-frame::before, .scan-frame::after {
+      content: ""; position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--ember);
+    }
+    .scan-frame::before { left: -5px; top: -5px; }
+    .scan-frame::after { right: -5px; bottom: -5px; }
+    .cover { width: 100%; height: 100%; object-fit: cover; }
     .screen-bottom {
       position: absolute; left: 14px; right: 14px; bottom: 16px; z-index: 2;
       background: rgba(15, 13, 18, .72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -162,11 +177,10 @@
     }
     .sb-row { display: flex; gap: 8px; }
     .sb-thumb {
-      flex: 1; aspect-ratio: 1; border-radius: 12px;
-      background: #241f28; display: grid; place-items: center;
-      border: 1px solid transparent;
+      flex: 1; aspect-ratio: 1; border-radius: 12px; overflow: hidden;
+      background: #241f28; border: 1.5px solid transparent; opacity: .6;
     }
-    .sb-thumb.active { border-color: var(--ember); background: #2e2228; }
+    .sb-thumb.active { border-color: var(--ember); opacity: 1; }
     .sb-slider { margin-top: 12px; display: flex; align-items: center; gap: 10px; font-size: .64rem; color: var(--muted); }
     .sb-track { flex: 1; height: 4px; border-radius: 4px; background: #2c2830; position: relative; }
     .sb-track::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 64%; border-radius: 4px; background: var(--grad); }
@@ -222,10 +236,11 @@
     .feature:hover::after { opacity: .28; }
     .feature-num { font-family: var(--serif); font-size: 1rem; color: var(--gold); letter-spacing: .1em; }
     .feature-art {
-      height: 190px; margin: 1.4rem 0 1.6rem; border-radius: 16px;
-      background: radial-gradient(circle at 50% 50%, #221c24, #121014);
-      display: grid; place-items: center; border: 1px solid var(--line);
+      height: 240px; margin: 1.4rem 0 1.6rem; border-radius: 16px; overflow: hidden;
+      background: #121014; border: 1px solid var(--line);
     }
+    .feature-art img { transition: transform .6s ease; }
+    .feature:hover .feature-art img { transform: scale(1.06); }
     .feature h3 { font-family: var(--serif); font-size: 1.95rem; font-weight: 600; line-height: 1.1; margin-bottom: .7rem; }
     .feature p { color: var(--muted); font-size: .96rem; }
     .feature ul { list-style: none; margin-top: 1.2rem; display: grid; gap: .5rem; }
@@ -240,7 +255,7 @@
       position: relative; border-radius: 28px; overflow: hidden;
       border: 1px solid var(--line);
       background: radial-gradient(100% 100% at 30% 20%, #2a1d22 0%, #110f13 70%);
-      aspect-ratio: 1 / 1;
+      min-height: 520px; padding: 3rem 0;
       display: grid; place-items: center;
     }
     .split-copy h3 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.1rem, 3.6vw, 3rem); line-height: 1.08; margin: 1rem 0 1.2rem; }
@@ -268,9 +283,9 @@
     .gen-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .8rem; }
     .gen-tile {
       aspect-ratio: 1; border-radius: 14px; background: #f0e6d6;
-      display: grid; place-items: center; position: relative; overflow: hidden;
+      position: relative; overflow: hidden;
     }
-    .gen-tile.dark { background: #1d191f; }
+    .gen-tile.active { outline: 2px solid var(--ember); outline-offset: 2px; }
     .gen-tile .lbl { position: absolute; left: 8px; bottom: 8px; font-size: .62rem; padding: .2rem .5rem; border-radius: 99px; background: rgba(11, 10, 12, .75); color: var(--bone); }
 
     /* meaning card mock */
@@ -279,7 +294,7 @@
       border-radius: 22px; padding: 1.6rem;
     }
     .meaning-head { display: flex; gap: 1rem; align-items: center; padding-bottom: 1.2rem; border-bottom: 1px solid var(--line); }
-    .meaning-thumb { width: 72px; height: 72px; border-radius: 16px; background: #f0e6d6; display: grid; place-items: center; flex: none; }
+    .meaning-thumb { width: 72px; height: 72px; border-radius: 16px; background: #f0e6d6; overflow: hidden; flex: none; }
     .meaning-head b { font-family: var(--serif); font-size: 1.5rem; font-weight: 600; display: block; line-height: 1.1; }
     .meaning-head span { color: var(--muted); font-size: .8rem; }
     .meaning-body { padding-top: 1.1rem; display: grid; gap: .9rem; }
@@ -306,17 +321,16 @@
     .style-card {
       aspect-ratio: 3 / 4; border-radius: 18px; overflow: hidden; position: relative;
       background: var(--ink-2); border: 1px solid var(--line);
-      display: grid; place-items: center;
       transition: transform .3s;
     }
     .style-card:hover { transform: translateY(-6px) rotate(-1deg); }
-    .style-card.light { background: #efe5d4; }
+    .style-card img { transition: transform .6s ease; }
+    .style-card:hover img { transform: scale(1.08); }
     .style-card .name {
-      position: absolute; left: 0; right: 0; bottom: 0; padding: .8rem;
-      font-size: .8rem; font-weight: 500; text-align: center;
-      background: linear-gradient(transparent, rgba(11, 10, 12, .85));
+      position: absolute; left: 0; right: 0; bottom: 0; padding: 2.2rem .8rem .9rem;
+      font-size: .85rem; font-weight: 600; text-align: center; color: var(--bone);
+      background: linear-gradient(transparent, rgba(11, 10, 12, .9));
     }
-    .style-card.light .name { color: var(--bone); }
 
     /* Why / stats strip */
     .why { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; }
@@ -341,14 +355,16 @@
     .cta {
       position: relative; overflow: hidden; text-align: center;
       border-radius: 36px; padding: 6rem 2rem;
-      background: radial-gradient(80% 120% at 50% 0%, #3b1620 0%, #140f15 60%);
+      background:
+        radial-gradient(80% 120% at 50% 0%, rgba(59, 22, 32, .78) 0%, rgba(11, 10, 12, .9) 65%),
+        url("images/cta-artist.jpg") center / cover no-repeat;
       border: 1px solid rgba(210, 56, 74, .3);
     }
+    .cta > * { position: relative; }
     .cta h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(2.6rem, 5.4vw, 4.6rem); line-height: 1; margin: 1.2rem 0 1.2rem; }
     .cta h2 em { font-style: italic; }
     .cta p { color: var(--muted); max-width: 520px; margin: 0 auto; font-weight: 300; font-size: 1.08rem; }
     .cta .hero-cta { justify-content: center; }
-    .cta-art { position: absolute; opacity: .12; pointer-events: none; }
 
     /* Footer */
     footer { padding: 80px 0 40px; border-top: 1px solid var(--line); margin-top: 120px; }
@@ -398,88 +414,6 @@
   </style>
 </head>
 <body>
-
-  <!-- Reusable SVG tattoo artwork -->
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <symbol id="art-rose" viewBox="0 0 120 160">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M60 22c-14 0-26 10-26 25 0 16 12 28 26 28s26-12 26-28c0-15-12-25-26-25z"/>
-          <path d="M60 34c-8 0-14 6-14 13 0 8 6 14 14 14s14-6 14-14"/>
-          <path d="M60 44c-3 0-5 2-5 4s2 4 5 4 5-2 5-4"/>
-          <path d="M34 47c-6 4-9 10-8 17 6 0 12-3 16-8"/>
-          <path d="M86 47c6 4 9 10 8 17-6 0-12-3-16-8"/>
-          <path d="M60 75v70"/>
-          <path d="M60 98c-10-6-24-6-30 2 8 8 22 7 30-2z"/>
-          <path d="M60 116c10-6 24-6 30 2-8 8-22 7-30-2z"/>
-          <path d="M57 88l-5-3M63 128l5-3M57 136l-5-2"/>
-        </g>
-      </symbol>
-      <symbol id="art-snake" viewBox="0 0 120 160">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M62 16c10 0 18 6 18 14s-8 12-18 12"/>
-          <path d="M62 16c-8 0-13 5-13 12 0 6 5 10 13 14"/>
-          <circle cx="68" cy="25" r="1.6" fill="currentColor"/>
-          <path d="M80 28l9-2-5 4 6 2"/>
-          <path d="M62 42c22 8 30 22 18 34-10 10-36 6-40 20-4 13 16 20 32 22 18 2 24 14 12 22-8 5-22 4-30 0"/>
-          <path d="M54 46c18 8 22 18 14 26-8 8-32 8-36 22-5 18 18 26 36 28 12 1 16 9 8 14"/>
-          <path d="M60 58l6 3M50 90l7 1M56 116l7-2M70 136l5 3"/>
-        </g>
-      </symbol>
-      <symbol id="art-moon" viewBox="0 0 120 120">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M72 18a42 42 0 1 0 30 70A34 34 0 0 1 72 18z"/>
-          <path d="M84 30l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"/>
-          <path d="M98 54l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/>
-          <circle cx="44" cy="60" r="3"/><circle cx="56" cy="84" r="2"/><circle cx="36" cy="82" r="1.5"/>
-        </g>
-      </symbol>
-      <symbol id="art-eye" viewBox="0 0 120 120">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M60 14l46 80H14z"/>
-          <path d="M34 66c8-10 17-14 26-14s18 4 26 14c-8 10-17 14-26 14s-18-4-26-14z"/>
-          <circle cx="60" cy="66" r="7"/>
-          <path d="M60 4v6M30 20l4 5M90 20l-4 5M14 40l6 2M106 40l-6 2"/>
-        </g>
-      </symbol>
-      <symbol id="art-swallow" viewBox="0 0 140 110">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M70 46c-6-10-16-14-26-12 6 4 10 10 12 16"/>
-          <path d="M70 46c8-4 14-12 14-22-12 2-20 10-22 20"/>
-          <path d="M62 44c-20-14-44-18-58-10 18 2 32 12 44 26 6 6 14 8 22 6"/>
-          <path d="M84 34c18-8 38-6 52 4-18 0-30 6-40 16"/>
-          <path d="M70 66c-4 12-14 22-26 30 4-10 6-18 6-26M70 66c8 10 12 22 10 36-6-10-12-18-20-24"/>
-          <circle cx="78" cy="30" r="1.4" fill="currentColor"/>
-        </g>
-      </symbol>
-      <symbol id="art-geo" viewBox="0 0 120 120">
-        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
-          <circle cx="60" cy="60" r="44"/>
-          <circle cx="60" cy="60" r="28"/>
-          <path d="M60 16l38 66H22z"/>
-          <path d="M60 104L22 38h76z"/>
-          <circle cx="60" cy="60" r="6" fill="currentColor"/>
-        </g>
-      </symbol>
-      <symbol id="art-dagger" viewBox="0 0 80 160">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M40 8l8 22v66l-8 18-8-18V30z"/>
-          <path d="M40 30v74"/>
-          <path d="M14 112h52M20 112c0 6 4 10 10 10h20c6 0 10-4 10-10"/>
-          <path d="M34 122v20h12v-20"/>
-          <circle cx="40" cy="150" r="6"/>
-        </g>
-      </symbol>
-      <symbol id="art-wave" viewBox="0 0 140 100">
-        <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6 78c20-4 30-24 34-44 4-20 24-28 40-18 12 8 10 26-2 28-10 2-14-10-6-14"/>
-          <path d="M6 90c28 0 46-12 58-30 6 14 20 22 36 18 16-4 28-2 34 6"/>
-          <path d="M40 78c10-2 18-10 22-20M80 86c14 0 26-4 36-10"/>
-          <circle cx="112" cy="22" r="10"/>
-        </g>
-      </symbol>
-    </defs>
-  </svg>
 
   <!-- Nav -->
   <nav id="nav">
@@ -534,30 +468,14 @@
               <span class="pill-live"><i></i> Live Try-On</span>
               <span>Forearm</span>
             </div>
-            <!-- Arm with tattoo overlay -->
-            <svg class="arm" viewBox="0 0 276 590" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-              <defs>
-                <linearGradient id="skin" x1="0" x2="1">
-                  <stop offset="0" stop-color="#8a5c47"/>
-                  <stop offset=".45" stop-color="#c58d70"/>
-                  <stop offset="1" stop-color="#7b503d"/>
-                </linearGradient>
-              </defs>
-              <path d="M70 620 C 80 460, 96 330, 104 150 C 108 90, 168 90, 172 150 C 180 330, 196 460, 206 620 Z" fill="url(#skin)"/>
-              <g transform="translate(88 170) scale(.83)" color="#1a1214" opacity=".88">
-                <use href="#art-rose" width="120" height="160"/>
-              </g>
-              <g fill="none" stroke="#ff7a59" stroke-width="1.2" stroke-dasharray="5 5" opacity=".9">
-                <rect x="80" y="160" width="116" height="152" rx="10"/>
-              </g>
-              <g fill="#ff7a59"><circle cx="80" cy="160" r="4"/><circle cx="196" cy="160" r="4"/><circle cx="80" cy="312" r="4"/><circle cx="196" cy="312" r="4"/></g>
-            </svg>
+            <img class="arm" src="images/hero-forearm.jpg" alt="Tattoo previewed on a forearm" />
+            <div class="scan-frame"></div>
             <div class="screen-bottom">
               <div class="sb-row">
-                <div class="sb-thumb active"><svg width="28" height="36" color="#f0e6d6"><use href="#art-rose"/></svg></div>
-                <div class="sb-thumb"><svg width="30" height="30" color="#a39b8f"><use href="#art-moon"/></svg></div>
-                <div class="sb-thumb"><svg width="28" height="36" color="#a39b8f"><use href="#art-snake"/></svg></div>
-                <div class="sb-thumb"><svg width="30" height="30" color="#a39b8f"><use href="#art-geo"/></svg></div>
+                <div class="sb-thumb active"><img class="cover" src="images/thumb-snake.jpg" alt="" /></div>
+                <div class="sb-thumb"><img class="cover" src="images/thumb-flower.jpg" alt="" /></div>
+                <div class="sb-thumb"><img class="cover" src="images/thumb-hannya.jpg" alt="" /></div>
+                <div class="sb-thumb"><img class="cover" src="images/thumb-geo.jpg" alt="" /></div>
               </div>
               <div class="sb-slider"><span>Size</span><div class="sb-track"></div><span>64%</span></div>
             </div>
@@ -565,11 +483,11 @@
         </div>
         <div class="float-card fc-1">
           <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></div>
-          <b>Design generated</b><span>Fine-line rose · 4 variations</span>
+          <b>Design generated</b><span>Blackwork dagger · 4 variations</span>
         </div>
         <div class="float-card fc-2">
           <div class="fc-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg></div>
-          <b>Meaning: Rose</b><span>Love · Balance · Renewal</span>
+          <b>Meaning: Dagger</b><span>Courage · Protection · Sacrifice</span>
         </div>
       </div>
     </div>
@@ -595,15 +513,7 @@
       <div class="features">
         <article class="feature reveal">
           <span class="feature-num">01 — TRY ON</span>
-          <div class="feature-art">
-            <svg width="190" height="160" viewBox="0 0 190 160" aria-hidden="true">
-              <path d="M60 170 C 66 110, 74 60, 80 20 C 84 4, 110 4, 114 20 C 120 60, 128 110, 134 170Z" fill="#b98166" opacity=".9"/>
-              <g transform="translate(72 34) scale(.42)" color="#1a1214"><use href="#art-moon" width="120" height="120"/></g>
-              <rect x="66" y="28" width="62" height="62" rx="8" fill="none" stroke="#ff7a59" stroke-dasharray="4 4"/>
-              <circle cx="150" cy="40" r="16" fill="#1d191f" stroke="#ff7a59"/>
-              <path d="M144 40l4 4 8-8" stroke="#ff7a59" stroke-width="2" fill="none"/>
-            </svg>
-          </div>
+          <div class="feature-art"><img class="cover" src="images/feat-tryon.jpg" alt="Tattoo try-on on a forearm" loading="lazy" /></div>
           <h3>AI Tattoo Try-On</h3>
           <p>Point your camera or upload a photo and see any design placed realistically on your skin — curved, shaded and blended to match your tone.</p>
           <ul>
@@ -615,20 +525,7 @@
 
         <article class="feature reveal">
           <span class="feature-num">02 — CREATE</span>
-          <div class="feature-art">
-            <svg width="190" height="160" viewBox="0 0 190 160" aria-hidden="true">
-              <rect x="20" y="20" width="70" height="56" rx="10" fill="#f0e6d6"/>
-              <rect x="100" y="20" width="70" height="56" rx="10" fill="#f0e6d6"/>
-              <rect x="20" y="84" width="70" height="56" rx="10" fill="#f0e6d6"/>
-              <rect x="100" y="84" width="70" height="56" rx="10" fill="#2a2430" stroke="#ff7a59"/>
-              <g color="#151116">
-                <use href="#art-swallow" x="30" y="28" width="50" height="40"/>
-                <use href="#art-dagger" x="122" y="24" width="26" height="48"/>
-                <use href="#art-wave" x="30" y="92" width="50" height="40"/>
-              </g>
-              <path d="M135 100l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#ff7a59"/>
-            </svg>
-          </div>
+          <div class="feature-art"><img class="cover" src="images/feat-create.jpg" alt="AI-generated tattoo flash designs" loading="lazy" /></div>
           <h3>AI Design Generator</h3>
           <p>Describe what you imagine — a word, a memory, a feeling — and get original, stencil-ready tattoo designs in seconds, in the style you love.</p>
           <ul>
@@ -640,18 +537,7 @@
 
         <article class="feature reveal">
           <span class="feature-num">03 — DECODE</span>
-          <div class="feature-art">
-            <svg width="190" height="160" viewBox="0 0 190 160" aria-hidden="true">
-              <rect x="24" y="30" width="64" height="100" rx="12" fill="#f0e6d6"/>
-              <g color="#151116"><use href="#art-eye" x="30" y="52" width="52" height="52"/></g>
-              <rect x="100" y="38" width="66" height="8" rx="4" fill="#d9b26f"/>
-              <rect x="100" y="56" width="58" height="6" rx="3" fill="#4a434f"/>
-              <rect x="100" y="68" width="62" height="6" rx="3" fill="#4a434f"/>
-              <rect x="100" y="80" width="44" height="6" rx="3" fill="#4a434f"/>
-              <rect x="100" y="98" width="30" height="14" rx="7" fill="rgba(210,56,74,.3)"/>
-              <rect x="134" y="98" width="30" height="14" rx="7" fill="rgba(210,56,74,.3)"/>
-            </svg>
-          </div>
+          <div class="feature-art"><img class="cover" src="images/feat-meaning.jpg" alt="Snake tattoo on a shoulder" loading="lazy" /></div>
           <h3>Tattoo Meaning</h3>
           <p>Snap a photo of any tattoo or pick a symbol to uncover its origins, cultural context and the emotions it traditionally carries.</p>
           <ul>
@@ -672,13 +558,13 @@
           <div class="prompt-mock">
             <div class="prompt-box">
               <small>Your idea</small>
-              A swallow flying over ocean waves, fine-line, minimalist<span class="caret"></span>
+              A fierce tiger among peonies, symbol of courage and strength<span class="caret"></span>
             </div>
             <div class="gen-grid">
-              <div class="gen-tile"><svg width="70%" height="70%" color="#151116"><use href="#art-swallow"/></svg><span class="lbl">Fine line</span></div>
-              <div class="gen-tile dark"><svg width="70%" height="70%" color="#f0e6d6"><use href="#art-wave"/></svg><span class="lbl">Blackwork</span></div>
-              <div class="gen-tile dark"><svg width="60%" height="60%" color="#d9b26f"><use href="#art-geo"/></svg><span class="lbl">Geometric</span></div>
-              <div class="gen-tile"><svg width="60%" height="70%" color="#151116"><use href="#art-dagger"/></svg><span class="lbl">Traditional</span></div>
+              <div class="gen-tile active"><img class="cover" src="images/gen-japanese.jpg" alt="Japanese style tiger design" loading="lazy" /><span class="lbl">Japanese</span></div>
+              <div class="gen-tile"><img class="cover" src="images/gen-traditional.jpg" alt="Traditional style design" loading="lazy" /><span class="lbl">Traditional</span></div>
+              <div class="gen-tile"><img class="cover" src="images/gen-fineline.jpg" alt="Fine line design" loading="lazy" /><span class="lbl">Fine line</span></div>
+              <div class="gen-tile"><img class="cover" src="images/gen-geometric.jpg" alt="Geometric design" loading="lazy" /><span class="lbl">Geometric</span></div>
             </div>
           </div>
         </div>
@@ -707,7 +593,7 @@
         <div class="split-media">
           <div class="meaning-card">
             <div class="meaning-head">
-              <div class="meaning-thumb"><svg width="46" height="60" color="#151116"><use href="#art-snake"/></svg></div>
+              <div class="meaning-thumb"><img class="cover" src="images/meaning-serpent.jpg" alt="Serpent tattoo" loading="lazy" /></div>
               <div><b>Serpent</b><span>Identified · Neo-traditional</span></div>
             </div>
             <div class="meaning-body">
@@ -767,12 +653,12 @@
         <p>From delicate fine line to bold traditional — explore a growing library of tattoo styles and let AI adapt your idea to each one.</p>
       </div>
       <div class="styles reveal">
-        <div class="style-card light"><svg width="60%" height="60%" color="#151116"><use href="#art-rose"/></svg><span class="name">Fine Line</span></div>
-        <div class="style-card"><svg width="62%" height="62%" color="#d2384a"><use href="#art-dagger"/></svg><span class="name">Traditional</span></div>
-        <div class="style-card light"><svg width="70%" height="70%" color="#151116"><use href="#art-wave"/></svg><span class="name">Japanese</span></div>
-        <div class="style-card"><svg width="60%" height="60%" color="#d9b26f"><use href="#art-geo"/></svg><span class="name">Geometric</span></div>
-        <div class="style-card light"><svg width="64%" height="64%" color="#151116"><use href="#art-moon"/></svg><span class="name">Minimalist</span></div>
-        <div class="style-card"><svg width="60%" height="60%" color="#f0e6d6"><use href="#art-eye"/></svg><span class="name">Blackwork</span></div>
+        <div class="style-card"><img class="cover" src="images/style-fineline.jpg" alt="Fine line tattoo" loading="lazy" /><span class="name">Fine Line</span></div>
+        <div class="style-card"><img class="cover" src="images/style-traditional.jpg" alt="Traditional tattoo" loading="lazy" /><span class="name">Traditional</span></div>
+        <div class="style-card"><img class="cover" src="images/style-japanese.jpg" alt="Japanese tattoo" loading="lazy" /><span class="name">Japanese</span></div>
+        <div class="style-card"><img class="cover" src="images/style-geometric.jpg" alt="Geometric tattoo" loading="lazy" /><span class="name">Geometric</span></div>
+        <div class="style-card"><img class="cover" src="images/style-minimalist.jpg" alt="Minimalist tattoo" loading="lazy" /><span class="name">Minimalist</span></div>
+        <div class="style-card"><img class="cover" src="images/style-blackwork.jpg" alt="Blackwork tattoo" loading="lazy" /><span class="name">Blackwork</span></div>
       </div>
     </div>
   </section>
@@ -840,8 +726,6 @@
   <section style="padding-top: 0; padding-bottom: 0;">
     <div class="wrap">
       <div class="cta reveal">
-        <svg class="cta-art" width="320" height="420" style="left:-60px; top:-40px;" color="#f0e6d6"><use href="#art-rose"/></svg>
-        <svg class="cta-art" width="300" height="400" style="right:-50px; bottom:-60px;" color="#f0e6d6"><use href="#art-snake"/></svg>
         <span class="eyebrow">Start today</span>
         <h2>Design the tattoo<br />you'll <em class="grad-text">love forever</em>.</h2>
         <p>Download TattooAI and turn your ideas into ink-ready art — try it on, make it yours, and know what it means.</p>
